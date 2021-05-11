@@ -1,94 +1,79 @@
-# Ivy compatibility guide
+# Guía de Compatibilidad con Ivy
 
-The Angular team has worked hard to ensure Ivy is as backwards-compatible with the previous rendering engine ("View Engine") as possible.
-However, in rare cases, minor changes were necessary to ensure that the Angular's behavior was predictable and consistent, correcting issues in the View Engine implementation.
-In order to smooth the transition, we have provided [automated migrations](guide/updating-to-version-10#migrations) wherever possible so your application and library code is migrated automatically by the CLI.
-That said, some applications will likely need to apply some manual updates.
+El equipo de Angular ha trabajado arduamente para asegurar, en lo posible, su compatibilidad hacia atrás con la ingeniería de renderización anterior ("View Engine"). Sin embargo, en algunos casos, ciertos cambios pequeños fueron necesarios para asegurar que el comportamiento de Angular fuese predecible y consistente, corrigiendo issues en la implementación de View Engine. En pro de que la transición fuese suave, hemos proveído [migraciones automáticas](guide/updating-to-version-10#migrations) para que tu aplicación sea migrada automáticamente por el CLI en donde sea posible. Habiendo dicho esto, algunas aplicaciones pueden necesitar aplicar algunas actualizaciones manuales.
 
 {@a debugging}
-## How to debug errors with Ivy
+## Cómo depurar errores con Ivy
 
-In version 10, [a few deprecated APIs have been removed](guide/updating-to-version-10#removals) and there are a [few breaking changes](guide/updating-to-version-10#breaking-changes) unrelated to Ivy.
-If you're seeing errors after updating to version 9, you'll first want to rule those changes out.
+En la versión 10, [se removieron algunas APIs deprecadas](guide/updating-to-version-10#removals) y hay algunos cambios importantes no relacionados con Ivy. Si estás viendo errores después de actualizar a la versión 9, lo primero que querrás hacer será descartar esos cambios.
 
-To do so, temporarily [turn off Ivy](guide/ivy#opting-out-of-angular-ivy) in your `tsconfig.base.json` and re-start your app.
+Para hacerlo, [apaga Ivy temporalmente ](guide/ivy#opting-out-of-angular-ivy) en tu `tsconfig.base.json` y reinicia tu app.
 
-If you're still seeing the errors, they are not specific to Ivy. In this case, you may want to consult the [general version 10 guide](guide/updating-to-version-10). If you've opted into any of the new, stricter type-checking settings, you may also want to check out the [template type-checking guide](guide/template-typecheck).
+Si aún ves los errores, no están relacionados a Ivy. En este caso, quizás quieras consultar la [guía general de la versión 10](guide/updating-to-version-10). Si has optado por alguna de las nuevas y más estrictas configuraciones de verificación de tipos (type-checking), es posible que también quieras consultar [la guía plantilla de verificación de tipos](guide/template-typecheck).
 
-If the errors are gone, switch back to Ivy by removing the changes to the `tsconfig.base.json` and review the list of expected changes below.
+Si los errores desaparecieron, prende de nuevo Ivy removiendo los cambios en tu `tsconfig.base.json` y revisando la lista de cambios esperados que se describe a continuación.
 
 {@a payload-size-debugging}
-### Payload size debugging
+### Depuración del tamaño de la carga útil (payload)
 
-If you notice that the size of your application's main bundle has increased with Ivy, you may want to check the following:
+Si notas que el tamaño del bundle principal de tu aplicación ha aumentado con Ivy, quizás quieras chequear lo siguiente:
 
-1. Verify that the components and `NgModules` that you want to be lazy loaded are only imported in lazy modules.
-Anything that you import outside lazy modules can end up in the main bundle.
-See more details in the original issue [here](https://github.com/angular/angular-cli/issues/16146#issuecomment-557559287).
+1. Verifica que los componentes y los `NgModules` que quieres que carguen mediante carga diferida (lazy loading), solo sean importados en módulos lazy. Todo lo que importes fuera de un módulo lazy, puede irse directamente al bundle principal. Puedes ver más detalles del issue original [acá](https://github.com/angular/angular-cli/issues/16146#issuecomment-557559287).
 
-1. Check that imported libraries have been marked side-effect-free.
-If your app imports from shared libraries that are meant to be free from side effects, add "sideEffects": false to their `package.json`.
-This will ensure that the libraries will be properly tree-shaken if they are imported but not directly referenced.
-See more details in the original issue [here](https://github.com/angular/angular-cli/issues/16799#issuecomment-580912090).
+2. Verifica que las librerías importadas hayan sido marcadas como libres de efectos secundarios (side-effect-free). Si tu aplicación importa librerías compartidas que están hechas para ser libres de efectos secundarios, agrega `"sideEffects": false`a su `package.json`. Esto asegurará que las librerías serán propiamente llamadas si están importadas pero no directamente referenciadas. Puedes ver más detalles del issue original [acá](https://github.com/angular/angular-cli/issues/16799#issuecomment-580912090).
 
-1. Projects not using Angular CLI will see a significant size regression unless they update their minifier settings and set compile-time constants `ngDevMode`, `ngI18nClosureMode` and `ngJitMode` to `false` (for Terser, please set these to `false` via [`global_defs` config option](https://terser.org/docs/api-reference.html#conditional-compilation)).
-Please note that these constants are not meant to be used by 3rd party library or application code as they are not part of our public api surface and might change in the future.
-
+3. Los proyectos que no usen el CLI de Angular, verán una reducción de tamaño significativa, a menos que actualicen las configuraciones de su minificador y establezcan las constantes de tiempo de compilación `ngDevMode`, `ngI18nClosureMode` y `ngJitMode` en `false` (para Terser, por favor establece estas variables en `false` a través de las [opciones de configuración `global_defs`](https://terser.org/docs/api-reference.html#conditional-compilation)). Por favor ten en cuenta que estas constantes no están hechas para ser usadas por librerías de terceros o por código de aplicaciones que no sean parte de nuestra api, y que podría cambiar en un futuro.
 
 {@a common-changes}
-### Changes you may see
+### Cambios que podrás notar
 
-* By default, `@ContentChildren` queries will only search direct child nodes in the DOM hierarchy (previously, they would search any nesting level in the DOM as long as another directive wasn't matched above it). See further [details](guide/ivy-compatibility-examples#content-children-descendants).
+* Las consultas `@ContentChildren` por defecto sólo podrán buscar nodos que sean hijos directos en la jerarquía del DOM (anteriormente, estas consultas podían buscar en cualquier nivel de anidación del DOM mientras que no hubiese otra directiva por encima de él que coincidiese). Ver más [detalles](guide/ivy-compatibility-examples#content-children-descendants).
 
-* All classes that use Angular DI must have an Angular decorator like `@Directive()` or `@Injectable` (previously, undecorated classes were allowed in AOT mode only or if injection flags were used). See further [details](guide/ivy-compatibility-examples#undecorated-classes).
+* Todas las clases que usen Angular ID deben tener un decorador Angular como `@Directive()` o `@Injectable` (anteriormente, las clases no decoradas solo se permitían en el modo AOT, o si se usaban indicadores de inyección). Ver más [detalles](guide/ivy-compatibility-examples#undecorated-classes).
 
-* Unbound inputs for directives (e.g. name in `<my-comp name="">`) are now set upon creation of the view, before change detection runs (previously, all inputs were set during change detection).
+* Las entradas no vinculadas a las directivas (por ejemplo, nombres en `<my-comp name="">`), ahora se configuran al crear la vista, antes de que se ejecute la detección de cambios (anteriormente, todas las entradas se configuraban durante la detección de cambios).
 
-* Static attributes set directly in the HTML of a template will override any conflicting host attributes set by directives or components (previously, static host attributes set by directives / components would override static template attributes if conflicting).
+* Los atributos estáticos establecidos en el HTML de una plantilla, sobreescribirán cualquier atributo host que tenga conflictos y haya sido establecido por directivas o componentes (anteriormente, los atributos host estáticos establecidos por directivas o componentes, anularían los atributos estáticos de plantilla, de haber un conflicto).
 
 {@a less-common-changes}
-### Less common changes
+### Cambios menos comunes
 
-* Properties like `host` inside `@Component` and `@Directive` decorators can be inherited (previously, only properties with explicit field decorators like `@HostBinding` would be inherited).
+* Propiedades como `host` dentro de los decoradores `@Component` y `@Directive`, pueden ser heredados (anteriormente, solo serían heredadas las propiedades con decoradores de campos específicos como `@HostBinding`).
 
-* HammerJS support is opt-in through importing the `HammerModule` (previously, it was always included in production bundles regardless of whether the app used HammerJS).
+* El soporte de HammerJS es aceptado mediante la importación del módulo `HammerModule` (anteriormente, éste siempre era incluído en bundles de producción, independientemente si la aplicación usaba HammerJS).
 
-* `@ContentChild` and `@ContentChildren` queries will no longer be able to match their directive's own host node (previously, these queries would match the host node in addition to its content children).
+* Las consultas `@ContentChild` y `@ContentChildren` ya no podrán coincidir con el nodo host de su propia directiva (anteriormente, estas consultas coincidirían con el nodo host además de sus elementos secundarios).
 
-* If a token is injected with the `@Host` or `@Self` flag, the module injector is not searched for that token (previously, tokens marked with these flags would still search at the module level).
+* Si un token es inyectado en la bandera `@Host` o `@Self`, el modulo inyector no será buscado para ese token (anteriormente, los tokens marcados con estas banderas igualmente buscarían en el nivel del módulo).
 
-* When accessing multiple local refs with the same name in template bindings, the first is matched (previously, the last instance was matched).
+* Al acceder a varias referencias locales con el mismo nombre en los enlaces de platilla, coincidirá la primera referencia (anteriormente, coincidía la última instancia).
 
-* Directives that are used in an exported module (but not exported themselves) are exported publicly (previously, the compiler would automatically write a private, aliased export that it could use its global knowledge to resolve downstream).
+* Las directivas que son usadas en un módulo exportado (pero que no se exportan a sí mismas), son importadas públicamente (anteriormente, el compilador escribía automáticamente un exportación privada, con un alias que podría usar su base de conocimiento global para resolver hacia abajo).
 
-* Foreign functions or foreign constants in decorator metadata aren't statically resolvable (previously, you could import a constant or function from another compilation unit, like a library, and use that constant/function in your `@NgModule` definition).
+* Las funciones externas o las constantes externas en los metadados de los decoradores, no se pueden resolver estáticamente (anteriormente, podías importar una constante o función de otra unidad de compilación, como una librería, y usar esa constante/función en tu defición de `@NgModule`).
 
-* Forward references to directive inputs accessed through local refs are no longer supported by default. [details](guide/ivy-compatibility-examples#forward-refs-directive-inputs)
+* Las referencias directas a entradas de directivas que son accesadas mediante referencias locales, ya no son soportadas de forma predeterminada. [Más detalles](guide/ivy-compatibility-examples#forward-refs-directive-inputs).
 
-* If there is both an unbound class attribute and a `[class]` binding, the classes in the unbound attribute will also be added (previously, the class binding would overwrite classes in the unbound attribute).
+* Si hay un atributo de clase independiente y un enlace `[class]`, las clases en el atributo independiente también serán agregadas (anteriormente, el enlace de las clase sobreescribía las clases del atributo independiente).
 
-* It is now an error to assign values to template-only variables like `item` in `ngFor="let item of items"` (previously, the compiler would ignore these assignments).
+* Ahora es un error asignar valores a variables de tipo plantilla como `item` en `ngFor="let item of items"` (anteriormente, el compilador ignoraba estas asignaciones).
 
-* It's no longer possible to overwrite lifecycle hooks with mocks on directive instances for testing (instead, modify the lifecycle hook on the directive type itself).
+* Ya no es posible sobreescribir los hooks del ciclo de vida con simulaciones (mocks) en las instancias de directivas para realizar pruebas (en lugar de eso, modifica el hook del ciclo de vida del tipo de directiva en sí).
 
-* Special injection tokens (such as `TemplateRef` or `ViewContainerRef`) return a new instance whenever they are requested (previously, instances of special tokens were shared if requested on the same node). This primarily affects tests that do identity comparison of these objects.
+* Los tokens de inyección especial (como `TemplateRef` o `ViewContainerRef`) retornan una nueva instacion cuando sea que sean requeridas (anteriormente, las instancias de tokens especiales eran compartidas solo si eran requeridas en el mismo nodo). Esto afecta principalmente las pruebas que comparan la identidad de estos objetos.
 
-* ICU parsing happens at runtime, so only text, HTML tags and text bindings are allowed inside ICU cases (previously, directives were also permitted inside ICUs).
+* El parsing ICU ocurre en tiempo de ejecución, por lo que solo se permite texto, etiquetas HTML y enlaces de texto dentro de los casos de ICU (anteriormente, las directivas también eran permitidas dentro de las ICU).
 
-* Adding text bindings into i18n translations that are not present in the source template itself will throw a runtime error (previously, including extra bindings in translations was permitted).
+* Agregar enlaces de texto en las traducciones i18n que no están presente en la plantilla de origen, generará un error en tiempo de ejecución (anteriormente, era permitido incluír enlaces adicionales en las traducciones).
 
-* Extra HTML tags in i18n translations that are not present in the source template itself will be rendered as plain text (previously, these tags would render as HTML).
+* Las etiquetas HTML adicionales en las traducciones i18n que no estén presente en la plantilla de origen, serán renderizadas como texto plano (anteriormente, estas etiquetas se renderizaban como HTML).
 
-* Providers formatted as `{provide: X}` without a `useValue`, `useFactory`, `useExisting`, or `useClass` property are treated like `{provide: X, useClass: X}` (previously, it defaulted to `{provide: X, useValue: undefined}`).
+* Los proveedores formateados como `{provide: x}` sin las propiedades `useValue`, `useFactory`, `useExisting`, o `useClass`, son tratados como `{provide: X, useClass: X}` (anteriormente, estaba como predeterminado `{provide: X, useValue: undefined}`).
 
-* `DebugElement.attributes` returns `undefined` for attributes that were added and then subsequently removed (previously, attributes added and later removed would have a value of `null`).
+* `DebugElement.attributes`  retorna `undefined` para los atributos que fueron añadidos y luego se eliminaron (anteriormente, los atributos agregados y luego eliminados tenían un valor de `null`).
 
-* `DebugElement.classes` returns `undefined` for classes that were added and then subsequently removed (previously, classes added and later removed would have a value of `false`).
+* `DebugElement.classes` retorna `undefined` para las clases que fueron agregadas y luego eliminadas (anteriormente, las clases agregadas y luego eliminadas tenían un valor de `false`).
 
-* If selecting the native `<option>` element in a `<select>` where the `<option>`s are created via `*ngFor`, use the `[selected]` property of an `<option>` instead of binding to the `[value]` property of the `<select>` element (previously, you could bind to either.) [details](guide/ivy-compatibility-examples#select-value-binding)
+* Si seleccionas el elemento nativo `<option>` en un `<select>` donde las etiquetas `<option>` fueron creadas a través de un `*ngFor`, usa la propiedad `[selected]` de una etiqueta `<option>` en lugar de enlazarlo a la propiedad `[value]` del elemento `<select>` (anteriormente, podías enlazarlo a cualquiera de los dos elementos). [Más detalles](guide/ivy-compatibility-examples#select-value-binding).
 
-* Embedded views (such as ones created by `*ngFor`) are now inserted in front of anchor DOM comment node (e.g. `<!--ng-for-of-->`) rather than behind it as was the case previously.
-In most cases this does not have any impact on rendered DOM.
-In some cases (such as animations delaying the removal of an embedded view) any new embedded views will be inserted after the embedded view being animated away.
-This difference only last while the animation is active, and might alter the visual appearance of the animation.
-Once the animation is finished the resulting rendered DOM is identical to that rendered with View Engine.
+* Las vistas embebidas (como aquellas creadas con `*ngFor`) ahora se insertan delante del nodo de comentario ancla del DOM (como por ejemplo `<!--ng-for-of-->`), en lugar de hacerlo detrás como era el caso anteriormente. En la mayoría de los casos esto no tendrá ningún impacto en el DOM renderizado. En algunos casos (como animaciones que retrasan la eliminación de una vista embebida) cualquier vista embebida nueva, se insertará después que se termine la animación que elimina la vista embebida anterior. Esta diferencia solo dura mientras la animación está activa, y puede alterar la apariencia visual de la animación. Una vez finalizada la animación, el DOM renderizado resultante es idéntico al que hubiese sido renderizado con el View Engine.
