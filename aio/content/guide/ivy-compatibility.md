@@ -1,6 +1,6 @@
 # Guía de Compatibilidad con Ivy
 
-El equipo de Angular ha trabajado arduamente para asegurar, en lo posible, su compatibilidad hacia atrás con la ingeniería de renderización anterior ("View Engine"). Sin embargo, en algunos casos, ciertos cambios pequeños fueron necesarios para asegurar que el comportamiento de Angular fuese predecible y consistente, corrigiendo issues en la implementación de View Engine. En pro de que la transición fuese suave, hemos proveído [migraciones automáticas](guide/updating-to-version-10#migrations) para que tu aplicación sea migrada automáticamente por el CLI en donde sea posible. Habiendo dicho esto, algunas aplicaciones pueden necesitar aplicar algunas actualizaciones manuales.
+El equipo de Angular ha trabajado arduamente para asegurar, en lo posible, su compatibilidad hacia atrás con el motor de renderización anterior ("View Engine"). Sin embargo, en algunos casos, ciertos cambios pequeños fueron necesarios para asegurar que el comportamiento de Angular fuese predecible y consistente, corrigiendo problemas en la implementación de View Engine. En pro de que la transición fuese suave, hemos proveído [migraciones automáticas](guide/updating-to-version-10#migrations) para que tu aplicación sea migrada automáticamente por el CLI en donde sea posible. Habiendo dicho esto, algunas aplicaciones pueden necesitar aplicar algunas actualizaciones manuales.
 
 {@a debugging}
 ## Cómo depurar errores con Ivy
@@ -11,7 +11,7 @@ Para hacerlo, [apaga Ivy temporalmente ](guide/ivy#opting-out-of-angular-ivy) en
 
 Si aún ves los errores, no están relacionados a Ivy. En este caso, quizás quieras consultar la [guía general de la versión 10](guide/updating-to-version-10). Si has optado por alguna de las nuevas y más estrictas configuraciones de verificación de tipos (type-checking), es posible que también quieras consultar [la guía plantilla de verificación de tipos](guide/template-typecheck).
 
-Si los errores desaparecieron, prende de nuevo Ivy removiendo los cambios en tu `tsconfig.base.json` y revisando la lista de cambios esperados que se describe a continuación.
+Si los errores desaparecieron, prende de nuevo Ivy removiendo los cambios en tu `tsconfig.base.json` y revisando la lista de cambios esperados que se describen a continuación.
 
 {@a payload-size-debugging}
 ### Depuración del tamaño de la carga útil (payload)
@@ -20,9 +20,9 @@ Si notas que el tamaño del bundle principal de tu aplicación ha aumentado con 
 
 1. Verifica que los componentes y los `NgModules` que quieres que carguen mediante carga diferida (lazy loading), solo sean importados en módulos lazy. Todo lo que importes fuera de un módulo lazy, puede irse directamente al bundle principal. Puedes ver más detalles del issue original [acá](https://github.com/angular/angular-cli/issues/16146#issuecomment-557559287).
 
-2. Verifica que las librerías importadas hayan sido marcadas como libres de efectos secundarios (side-effect-free). Si tu aplicación importa librerías compartidas que están hechas para ser libres de efectos secundarios, agrega `"sideEffects": false`a su `package.json`. Esto asegurará que las librerías serán propiamente llamadas si están importadas pero no directamente referenciadas. Puedes ver más detalles del issue original [acá](https://github.com/angular/angular-cli/issues/16799#issuecomment-580912090).
+2. Verifica que las librerías importadas hayan sido marcadas como libres de efectos secundarios (side-effect-free). Si tu aplicación importa librerías compartidas que están hechas para ser libres de efectos secundarios, agrega `"sideEffects": false` a tu `package.json`. Esto asegurará que las librerías serán propiamente llamadas si están importadas pero no directamente referenciadas. Puedes ver más detalles del problema original [acá](https://github.com/angular/angular-cli/issues/16799#issuecomment-580912090).
 
-3. Los proyectos que no usen el CLI de Angular, verán una reducción de tamaño significativa, a menos que actualicen las configuraciones de su minificador y establezcan las constantes de tiempo de compilación `ngDevMode`, `ngI18nClosureMode` y `ngJitMode` en `false` (para Terser, por favor establece estas variables en `false` a través de las [opciones de configuración `global_defs`](https://terser.org/docs/api-reference.html#conditional-compilation)). Por favor ten en cuenta que estas constantes no están hechas para ser usadas por librerías de terceros o por código de aplicaciones que no sean parte de nuestra api, y que podría cambiar en un futuro.
+3. Los proyectos que no usen el CLI de Angular, verán una reducción de tamaño significativa, a menos que actualicen las configuraciones de su minificador y establezcan las constantes de tiempo de compilación `ngDevMode`, `ngI18nClosureMode` y `ngJitMode` en `false` (para Terser, por favor establece estas variables en `false` a través de las [opciones de configuración `global_defs`](https://terser.org/docs/api-reference.html#conditional-compilation)). Por favor ten en cuenta que estas constantes no están hechas para ser usadas por librerías de terceros o por código de aplicaciones que no sean parte de nuestra API, y que podría cambiar en un futuro.
 
 {@a common-changes}
 ### Cambios que podrás notar
@@ -50,7 +50,7 @@ Si notas que el tamaño del bundle principal de tu aplicación ha aumentado con 
 
 * Las directivas que son usadas en un módulo exportado (pero que no se exportan a sí mismas), son importadas públicamente (anteriormente, el compilador escribía automáticamente un exportación privada, con un alias que podría usar su base de conocimiento global para resolver hacia abajo).
 
-* Las funciones externas o las constantes externas en los metadados de los decoradores, no se pueden resolver estáticamente (anteriormente, podías importar una constante o función de otra unidad de compilación, como una librería, y usar esa constante/función en tu defición de `@NgModule`).
+* Las funciones externas o las constantes externas en los metadatos de los decoradores, no se pueden resolver estáticamente (anteriormente, podías importar una constante o función de otra unidad de compilación, como una librería, y usar esa constante/función en tu definición de `@NgModule`).
 
 * Las referencias directas a entradas de directivas que son accesadas mediante referencias locales, ya no son soportadas de forma predeterminada. [Más detalles](guide/ivy-compatibility-examples#forward-refs-directive-inputs).
 
@@ -60,7 +60,7 @@ Si notas que el tamaño del bundle principal de tu aplicación ha aumentado con 
 
 * Ya no es posible sobreescribir los hooks del ciclo de vida con simulaciones (mocks) en las instancias de directivas para realizar pruebas (en lugar de eso, modifica el hook del ciclo de vida del tipo de directiva en sí).
 
-* Los tokens de inyección especial (como `TemplateRef` o `ViewContainerRef`) retornan una nueva instacion cuando sea que sean requeridas (anteriormente, las instancias de tokens especiales eran compartidas solo si eran requeridas en el mismo nodo). Esto afecta principalmente las pruebas que comparan la identidad de estos objetos.
+* Los tokens de inyección especial (como `TemplateRef` o `ViewContainerRef`) retornan una nueva instancia cuando sea que sean requeridas (anteriormente, las instancias de tokens especiales eran compartidas solo si eran requeridas en el mismo nodo). Esto afecta principalmente las pruebas que comparan la identidad de estos objetos.
 
 * El parsing ICU ocurre en tiempo de ejecución, por lo que solo se permite texto, etiquetas HTML y enlaces de texto dentro de los casos de ICU (anteriormente, las directivas también eran permitidas dentro de las ICU).
 
